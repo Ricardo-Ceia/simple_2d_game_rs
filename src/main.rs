@@ -6,7 +6,7 @@ fn generate_enemy_pos(x_limit: f32) -> f32 {
 
 #[macroquad::main("BasicShapes")]
 async fn main() {
-    
+         
     let rect_width = 120.0;
     let rect_height = 10.0;
     let rect_y = screen_height() - 100.0;
@@ -16,12 +16,11 @@ async fn main() {
     let mut movement = 1.0;
     
     let mut enemy_pos_x;
-    loop {
-        let screen_w = screen_width();
+    let mut frame_time = 0.0;
 
-        enemy_pos_x = generate_enemy_pos(screen_w);
-        
-        println!("Alien position->{enemy_pos_x}");
+    loop {
+
+        let screen_w = screen_width();
 
         rect_pos_x += speed*movement;
 
@@ -30,7 +29,14 @@ async fn main() {
         }
         
         draw_rectangle(rect_pos_x, rect_y, rect_width, rect_height, GREEN);
-        draw_fps();
+        draw_fps(); 
+        frame_time += get_frame_time();
+        //TODO:here verify how should the period of spanning enemies be created
+        if frame_time > (1000.0*get_frame_time()){
+            enemy_pos_x = generate_enemy_pos(screen_w); 
+            println!("Enemy spanning at position->{enemy_pos_x} time->{frame_time}");
+            frame_time = 0.0;
+        }
         next_frame().await;
     }
 }
