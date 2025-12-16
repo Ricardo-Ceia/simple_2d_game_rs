@@ -4,6 +4,10 @@ fn generate_enemy_pos(x_limit: f32) -> f32 {
     rand::gen_range(0.0, x_limit)  
 }
 
+fn draw_enemy(enemy_position_x: f32){
+    draw_rectangle(enemy_position_x, 0.0, 60.0, 60.0, GREEN);
+}
+
 #[macroquad::main("BasicShapes")]
 async fn main() {
          
@@ -15,9 +19,8 @@ async fn main() {
     let mut rect_pos_x = 0.0;
     let mut movement = 1.0;
     
-    let mut enemy_pos_x;
     let mut frame_time = 0.0;
-
+    let mut enemies:Vec<f32> = Vec::new(); 
     loop {
 
         let screen_w = screen_width();
@@ -32,10 +35,13 @@ async fn main() {
         draw_fps(); 
         frame_time += get_frame_time();
         //TODO:here verify how should the period of spanning enemies be created
-        if frame_time > (1000.0*get_frame_time()){
-            enemy_pos_x = generate_enemy_pos(screen_w); 
-            println!("Enemy spanning at position->{enemy_pos_x} time->{frame_time}");
+        if frame_time > 4.0{
+            enemies.push(generate_enemy_pos(screen_w));
             frame_time = 0.0;
+        }
+
+        for enemie_x in &enemies{
+            draw_enemy(*enemie_x);
         }
         next_frame().await;
     }
