@@ -4,18 +4,19 @@ fn generate_enemy_pos(x_limit: f32) -> f32 {
     rand::gen_range(0.0, x_limit)  
 }
 
-fn draw_enemy(enemy_position_x: f32, enemy_position_y: f32){
-    draw_rectangle(enemy_position_x, enemy_position_y, 60.0, 60.0, GREEN);
+fn draw_enemy(enemy_position_x: f32, enemy_position_y: f32,color:&Color){
+    draw_rectangle(enemy_position_x, enemy_position_y, 60.0, 60.0, *color);
 }
 
-fn is_game_over(enemies: &[(f32,f32)],y_limit:f32)->bool{
-    for (_,enemie_y) in enemies{
+fn is_game_over(enemies: &[(f32,f32,Color)],y_limit:f32)->bool{
+    for (_,enemie_y,_) in enemies{
         if *enemie_y>=y_limit{
            return true; 
         }
     }
     false
 }
+
 
 #[macroquad::main("BasicShapes")]
 async fn main() {
@@ -26,7 +27,7 @@ async fn main() {
     let mut rect_pos_x = 0.0;
     
     let mut frame_time = 0.0;
-    let mut enemies:Vec<(f32,f32)> = Vec::new();
+    let mut enemies:Vec<(f32,f32,Color)> = Vec::new();
     let mut game_over:bool = false;
     loop {
         
@@ -54,15 +55,23 @@ async fn main() {
         draw_rectangle(rect_pos_x, rect_y, rect_width, rect_height, GREEN);
         draw_fps(); 
         frame_time += get_frame_time();
+        
         if frame_time > 4.0{
-            enemies.push((generate_enemy_pos(screen_w),0.0));
+            enemies.push((generate_enemy_pos(screen_w),0.0,GREEN));
             frame_time = 0.0;
         }
 
-        for (enemie_x,enemie_y) in &mut enemies{
-            draw_enemy(*enemie_x,*enemie_y);
+        for (enemie_x,enemie_y,color) in &mut enemies{
+            if color.r<1.0{
+                color.r+=0.002;
+            }
+            if color.g>0.0{
+                color.g-=0.002;
+            }
+            draw_enemy(*enemie_x,*enemie_y,&color);
             *enemie_y+=1.;
         }
+
         next_frame().await;
     }
 }
