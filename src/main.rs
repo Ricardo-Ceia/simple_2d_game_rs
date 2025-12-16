@@ -8,8 +8,12 @@ fn draw_enemy(enemy_position_x: f32, enemy_position_y: f32,color:&Color){
     draw_rectangle(enemy_position_x, enemy_position_y, 60.0, 60.0, *color);
 }
 
-fn is_game_over(enemies: &[(f32,f32,Color)],y_limit:f32)->bool{
-    for (_,enemie_y,_) in enemies{
+fn draw_missile(missile_position_x: f32, missile_position_y: f32){
+    draw_rectangle(missile_position_x, missile_position_y, 10.0, 30.0, YELLOW);
+}
+
+fn is_game_over(enemies: &[(f32,f32,i8,Color)],y_limit:f32)->bool{
+    for (_,enemie_y,_,_) in enemies{
         if *enemie_y>=y_limit{
            return true; 
         }
@@ -27,8 +31,12 @@ async fn main() {
     let mut rect_pos_x = 0.0;
     
     let mut frame_time = 0.0;
-    let mut enemies:Vec<(f32,f32,Color)> = Vec::new();
+    
+    let mut enemies:Vec<(f32,f32,i8,Color)> = Vec::new();
+    let mut missiles: Vec<(f32, f32)> = Vec::new();
+
     let mut game_over:bool = false;
+
     loop {
         
         let screen_w = screen_width();
@@ -40,6 +48,11 @@ async fn main() {
 
         if is_key_down(KeyCode::Left) && rect_pos_x>=0.0{
             rect_pos_x -= 1.0;
+        }
+
+        if is_key_down(KeyCode::F){
+            //TODO:check where the missile starts in terms of x
+            missiles.push((rect_pos_x+(rect_width/2.0),rect_y-rect_height*2.0))
         }
 
         if game_over{
@@ -57,11 +70,12 @@ async fn main() {
         frame_time += get_frame_time();
         
         if frame_time > 4.0{
-            enemies.push((generate_enemy_pos(screen_w),0.0,GREEN));
+            let mut health:i8 = 100;
+            enemies.push((generate_enemy_pos(screen_w),0.0,health,GREEN));
             frame_time = 0.0;
         }
 
-        for (enemie_x,enemie_y,color) in &mut enemies{
+        for (enemie_x,enemie_y,_,color) in &mut enemies{
             if color.r<1.0{
                 color.r+=0.002;
             }
@@ -69,7 +83,12 @@ async fn main() {
                 color.g-=0.002;
             }
             draw_enemy(*enemie_x,*enemie_y,&color);
-            *enemie_y+=1.;
+            *enemie_y+=0.01;
+        }
+            
+        for (missile_x,missile_y) in &mut missiles{
+            draw_missile(*missile_x,*missile_y);
+            *missile_y-=1.0; 
         }
 
         next_frame().await;
