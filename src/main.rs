@@ -19,20 +19,25 @@ fn is_game_over(enemies: &[(f32,f32)])->bool{
 
 #[macroquad::main("BasicShapes")]
 async fn main() {
-         
     let rect_width = 120.0;
     let rect_height = 10.0;
     let rect_y = screen_height() - 100.0;
-    let speed = 3.0;
 
     let mut rect_pos_x = 0.0;
-    let mut movement = 1.0;
     
     let mut frame_time = 0.0;
     let mut enemies:Vec<(f32,f32)> = Vec::new();
     let mut game_over:bool = false;
-
     loop {
+
+        if is_key_down(KeyCode::Right) {
+            rect_pos_x += 1.0;
+        }
+
+        if is_key_down(KeyCode::Left) {
+            rect_pos_x -= 1.0;
+        }
+
         if game_over{
             draw_text("GAME OVER", screen_width()/2.0 - 100.0, screen_height()/2.0, 50.0, RED);
             next_frame().await;
@@ -45,11 +50,6 @@ async fn main() {
 
         let screen_w = screen_width();
 
-        rect_pos_x += speed*movement;
-
-        if rect_pos_x+rect_width>=screen_w || rect_pos_x<0.0{
-            movement*=-1.0;
-        }
         
         draw_rectangle(rect_pos_x, rect_y, rect_width, rect_height, GREEN);
         draw_fps(); 
@@ -61,7 +61,7 @@ async fn main() {
 
         for (enemie_x,enemie_y) in &mut enemies{
             draw_enemy(*enemie_x,*enemie_y);
-            *enemie_y+=10.0;
+            *enemie_y+=0.1;
         }
         next_frame().await;
     }
