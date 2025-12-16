@@ -8,9 +8,9 @@ fn draw_enemy(enemy_position_x: f32, enemy_position_y: f32){
     draw_rectangle(enemy_position_x, enemy_position_y, 60.0, 60.0, GREEN);
 }
 
-fn is_game_over(enemies: &[(f32,f32)])->bool{
+fn is_game_over(enemies: &[(f32,f32)],y_limit:f32)->bool{
     for (_,enemie_y) in enemies{
-        if *enemie_y>=screen_height(){
+        if *enemie_y>=y_limit{
            return true; 
         }
     }
@@ -47,7 +47,7 @@ async fn main() {
             continue;
         }
 
-        if is_game_over(&enemies){
+        if is_game_over(&enemies,rect_y-60.0){
             game_over = true;  
         }
 
@@ -61,7 +61,7 @@ async fn main() {
 
         for (enemie_x,enemie_y) in &mut enemies{
             draw_enemy(*enemie_x,*enemie_y);
-            *enemie_y+=0.1;
+            *enemie_y+=1.;
         }
         next_frame().await;
     }
