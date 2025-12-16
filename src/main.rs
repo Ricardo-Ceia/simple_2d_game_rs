@@ -29,17 +29,20 @@ async fn main() {
     let mut enemies:Vec<(f32,f32)> = Vec::new();
     let mut game_over:bool = false;
     loop {
+        
+        let screen_w = screen_width();
+        let screen_h = screen_height();
 
-        if is_key_down(KeyCode::Right) {
+        if is_key_down(KeyCode::Right) && rect_pos_x<=screen_w-rect_width{
             rect_pos_x += 1.0;
         }
 
-        if is_key_down(KeyCode::Left) {
+        if is_key_down(KeyCode::Left) && rect_pos_x>=0.0{
             rect_pos_x -= 1.0;
         }
 
         if game_over{
-            draw_text("GAME OVER", screen_width()/2.0 - 100.0, screen_height()/2.0, 50.0, RED);
+            draw_text("GAME OVER", screen_w/2.0 - 100.0, screen_h/2.0, 50.0, RED);
             next_frame().await;
             continue;
         }
@@ -48,9 +51,6 @@ async fn main() {
             game_over = true;  
         }
 
-        let screen_w = screen_width();
-
-        
         draw_rectangle(rect_pos_x, rect_y, rect_width, rect_height, GREEN);
         draw_fps(); 
         frame_time += get_frame_time();
