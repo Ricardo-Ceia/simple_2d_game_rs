@@ -21,6 +21,17 @@ fn is_game_over(enemies: &[(f32,f32,i8,Color)],y_limit:f32)->bool{
     false
 }
 
+fn check_colision(missile_x:f32,missile_y:f32,enemy_x:f32,enemy_y:f32)->bool{
+    let missile_w = 10.0;
+    let missile_h = 30.0;
+    let enemy_w = 60.0;
+    let enemy_h = 60.0;
+
+    missile_x < enemy_x + enemy_w &&
+    missile_x + missile_w > enemy_x &&
+    missile_y < enemy_y + enemy_h &&
+    missile_y + missile_h > enemy_y
+}
 
 #[macroquad::main("BasicShapes")]
 async fn main() {
@@ -50,7 +61,7 @@ async fn main() {
             rect_pos_x -= 1.0;
         }
 
-        if is_key_down(KeyCode::F){
+        if is_key_pressed(KeyCode::F){
             //TODO:check where the missile starts in terms of x
             missiles.push((rect_pos_x+(rect_width/2.0),rect_y-rect_height*2.0))
         }
@@ -70,27 +81,42 @@ async fn main() {
         frame_time += get_frame_time();
         
         if frame_time > 4.0{
-            let mut health:i8 = 100;
+            let mut health:i8 = 3;
             enemies.push((generate_enemy_pos(screen_w),0.0,health,GREEN));
             frame_time = 0.0;
+        }
+        
+        for missile in missiles.iter_mut(){
+            for enemy in enemies.iter_mut(){
+                if check_colision(missile.0, missile.1, enemy.0, enemy.1){
+                    enemy.2-=1;
+                    missile.1= -1.0;//Mark missile as dead 
+                    break;
+                }
+            }
         }
 
         for (enemie_x,enemie_y,_,color) in &mut enemies{
             if color.r<1.0{
                 color.r+=0.002;
             }
+
             if color.g>0.0{
                 color.g-=0.002;
             }
+
             draw_enemy(*enemie_x,*enemie_y,&color);
             *enemie_y+=0.01;
         }
-            
+        
         for (missile_x,missile_y) in &mut missiles{
             draw_missile(*missile_x,*missile_y);
             *missile_y-=1.0; 
         }
 
+        enemies.retain(|enemy| enemy.2>0);
+        missiles.retain(|missile| missile.1>0.0);
+        
         next_frame().await;
     }
 }
