@@ -26,7 +26,7 @@ fn check_colision(missile_x:f32,missile_y:f32,enemy_x:f32,enemy_y:f32)->bool{
     let missile_h = 30.0;
     let enemy_w = 60.0;
     let enemy_h = 60.0;
-
+    
     missile_x < enemy_x + enemy_w &&
     missile_x + missile_w > enemy_x &&
     missile_y < enemy_y + enemy_h &&
@@ -38,7 +38,7 @@ async fn main() {
     let rect_width = 120.0;
     let rect_height = 10.0;
     let rect_y = screen_height() - 100.0;
-
+    let limit = rect_y-60.0;
     let mut rect_pos_x = 0.0;
     
     let mut frame_time = 0.0;
@@ -62,7 +62,6 @@ async fn main() {
         }
 
         if is_key_pressed(KeyCode::F){
-            //TODO:check where the missile starts in terms of x
             missiles.push((rect_pos_x+(rect_width/2.0),rect_y-rect_height*2.0))
         }
 
@@ -72,7 +71,7 @@ async fn main() {
             continue;
         }
 
-        if is_game_over(&enemies,rect_y-60.0){
+        if is_game_over(&enemies,limit){
             game_over = true;  
         }
 
@@ -97,16 +96,20 @@ async fn main() {
         }
 
         for (enemie_x,enemie_y,_,color) in &mut enemies{
-            if color.r<1.0{
-                color.r+=0.002;
-            }
 
-            if color.g>0.0{
-                color.g-=0.002;
+            let progress = (*enemie_y/limit).clamp(0.0, 1.0);
+            
+            if progress<0.5{
+                color.r = progress*2.0;
+                color.g = 1.0;
+            }else{
+                color.r = 1.0;
+                color.g = 1.0-(progress-0.5)*2.0;
             }
+            color.b=0.0;
 
             draw_enemy(*enemie_x,*enemie_y,&color);
-            *enemie_y+=0.01;
+            *enemie_y+=0.1;
         }
         
         for (missile_x,missile_y) in &mut missiles{
