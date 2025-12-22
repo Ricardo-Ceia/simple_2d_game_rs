@@ -10,12 +10,25 @@ fn generate_enemy_pos(x_limit: f32) -> f32 {
     rand::gen_range(0.0, x_limit)  
 }
 
-fn draw_enemy(enemy_position_x: f32, enemy_position_y: f32,color:&Color){
-    draw_rectangle(enemy_position_x, enemy_position_y, 60.0, 60.0, *color);
+fn draw_enemy(x: f32, y: f32,color:&Color){
+    draw_rectangle(x, y, 60.0, 60.0, *color);
 }
 
-fn draw_missile(missile_position_x: f32, missile_position_y: f32){
-    draw_rectangle(missile_position_x, missile_position_y, 10.0, 30.0, YELLOW);
+fn draw_missile(x: f32,y: f32){
+    //Body
+    draw_rectangle(x,y+10.0,10.0,20.0,LIGHTGRAY);
+
+    //Nose
+    draw_triangle(vec2(x,y+10.0), vec2(x+10.0,y+10.0), vec2(x+5.0,y), RED);
+
+    //Fins
+    draw_triangle(vec2(x, y + 20.0), vec2(x - 5.0, y + 30.0),vec2(x, y + 30.0), DARKGRAY);                                   
+    draw_triangle(vec2(x + 10.0, y + 20.0), vec2(x + 15.0, y + 30.0), vec2(x + 10.0, y + 30.0), DARKGRAY);
+
+    //Flame
+    let flicker = rand::gen_range(0.0,5.0);
+    draw_triangle(vec2(x + 2.0, y + 30.0), vec2(x + 8.0, y + 30.0), vec2(x + 5.0, y + 40.0 + flicker), ORANGE);              
+    draw_triangle(vec2(x + 3.0, y + 30.0), vec2(x + 7.0, y + 30.0), vec2(x + 5.0, y + 35.0 + flicker), YELLOW);
 }
 
 fn is_game_over(enemies: &[(f32,f32,i8,Color)],y_limit:f32)->bool{
