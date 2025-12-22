@@ -1,4 +1,10 @@
-use macroquad::prelude::*;
+use macroquad::{prelude::*};
+
+struct Particle{
+    pos:    Vec2,
+    velocity:   Vec2,
+    life:   f32,
+}
 
 fn generate_enemy_pos(x_limit: f32) -> f32 {
     rand::gen_range(0.0, x_limit)  
@@ -33,6 +39,47 @@ fn check_colision(missile_x:f32,missile_y:f32,enemy_x:f32,enemy_y:f32)->bool{
     missile_y + missile_h > enemy_y
 }
 
+fn generate_normal_point_in_circle(center:Vec2,max_radius:f32,std_dev:f32)->Vec2{
+    loop{
+        let u1:f32 = rand::gen_range(1e-6, 1.0);
+        let u2 = rand::gen_range(0.0, 1.0);
+
+        //Box-Muller transform
+        //wiki link: https://en.wikipedia.org/wiki/Box%E2%80%93Muller_transform
+        let magnitude = (-2.0 * u1.ln()).sqrt()*std_dev;
+        let angle = 2.0*std::f32::consts::PI * u2;
+
+        let x = magnitude*angle.cos();
+        let y = magnitude*angle.sin();
+
+        //Rejection Sampling
+        //Only accept the point if it falls within the circle'std
+        if x*x+y*y<=max_radius*max_radius{
+            return vec2(center.x+x,center.y+y);
+        }
+    }    
+}
+
+fn create_explosion(center:Vec2,radius:f32,min_count:i32,max_count:i32)->Vec<Particle>{
+    let count = rand::gen_range(min_count, max_count+1);
+    let mut particles = Vec::with_capacity(count as usize);
+
+    let std_dev =radius/3.0;
+
+    for _ in 0..count {
+        let start_pos = generate_normal_point_in_circle(center, radius, std_dev);
+        let direction = (start_pos - center).normalize_or_zero();
+        let speed = rand::gen_range(2.0, 5.0);
+
+        particles.push(Particle { 
+            pos: start_pos,
+            velocity: direction*speed,
+            life: 1.0 
+        });
+    }
+    particles
+}
+
 #[macroquad::main("BasicShapes")]
 async fn main() {
     let rect_width = 120.0;
@@ -45,6 +92,7 @@ async fn main() {
     
     let mut enemies:Vec<(f32,f32,i8,Color)> = Vec::new();
     let mut missiles: Vec<(f32, f32)> = Vec::new();
+    let mut particles: Vec<Particle> = Vec::new();
 
     let mut game_over:bool = false;
 
@@ -89,7 +137,10 @@ async fn main() {
             for enemy in enemies.iter_mut(){
                 if check_colision(missile.0, missile.1, enemy.0, enemy.1){
                     enemy.2-=1;
-                    missile.1= -1.0;//Mark missile as dead 
+                    let impact_pos = vec2(missile.0 + 5.0,missile.1+rect_height/2.0);
+                    let new_particles = create_explosion(impact_pos, 20.0, 10, 20);
+                    particles.extend(new_particles);
+                    missile.1= -1.0;
                     break;
                 }
             }
@@ -117,6 +168,15 @@ async fn main() {
             *missile_y-=1.0; 
         }
 
+        for particle in particles.iter_mut(){
+            particle.pos += particle.velocity;
+            particle.life -= 0.02;
+
+            let alpha = particle.life.clamp(0.0,1.0);
+            draw_circle(particle.pos.x,particle.pos.y,2.0,Color::new(1.0,0.5,0.0,alpha));
+        }
+        
+        particles.retain(|p| p.life>0.0);
         enemies.retain(|enemy| enemy.2>0);
         missiles.retain(|missile| missile.1>0.0);
         
